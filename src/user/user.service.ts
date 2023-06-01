@@ -12,8 +12,8 @@ export class UserService {
 
     async create(CreateUserDtos: CreateUserDtos) {
 
-        if(this.findOneByEmail(CreateUserDtos.email) != null){
-            throw new BadRequestException("email exist!")
+        if(await this.findOneByEmail(CreateUserDtos.email) != null){
+            throw new BadRequestException("ops")
         }
         
         const data = {
