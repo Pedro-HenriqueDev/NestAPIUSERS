@@ -1,16 +1,30 @@
-
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import * as bcrypt from "bcrypt"
+import { User } from '@prisma/client';
+import { UserPayload } from './models/userPayload';
+import { JwtService } from '@nestjs/jwt';
+
 @Injectable()
 export class AuthService {
 
     constructor(
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly jwtService: JwtService
     ) {}
 
-    login() {
-        return "OPA"
+    login(user: User) {
+        const payload: UserPayload = {
+            sub: user.id,
+            email: user.email,
+            name: user.name
+        }
+
+        const jwtToken  = this.jwtService.sign(payload);
+        
+        return {
+            access_token: jwtToken
+        }
     }
 
     async validateUser(email: string, password: string) {
