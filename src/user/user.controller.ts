@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDtos } from './dtos/create-user.dtos';
-import { IsPublic } from 'src/auth/decorators/is-public.decorator';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { IsPublic } from '../auth/decorators/is-public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
 
 @Controller('user')
@@ -18,6 +18,17 @@ export class UserController {
   @Get()
   profile(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Get("all")
+  async findAll() {
+    try {
+      const users = await this.userService.findAll()
+      
+      return users
+    } catch(err) {
+      throw new InternalServerErrorException()
+    }
   }
 
 }

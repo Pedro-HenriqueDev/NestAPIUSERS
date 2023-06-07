@@ -1,35 +1,47 @@
 import { User } from './entities/user.entity';
 import { CreateUserDtos } from './dtos/create-user.dtos';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from "bcrypt"
-import { BadRequestException } from '@nestjs/common/exceptions';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common/exceptions';
 @Injectable()
 export class UserService {
     constructor(
         private readonly prisma: PrismaService
-    ) {}
+    ) { }
 
     async create(CreateUserDtos: CreateUserDtos) {
 
-        if(await this.findOneByEmail(CreateUserDtos.email) != null){
+        if (await this.findOneByEmail(CreateUserDtos.email) != null) {
             throw new BadRequestException("ops")
         }
-        
+
         const data = {
             ...CreateUserDtos,
-            password: await bcrypt.hash(CreateUserDtos.password.toString() , 10)
+            password: await bcrypt.hash(CreateUserDtos.password.toString(), 10)
         }
-        const createdUser = await this.prisma.user.create({data})
+        const createdUser = await this.prisma.user.create({ data })
 
-        const {password:_, ...res} = createdUser
+        const { password: _, ...res } = createdUser
         return res
     }
 
-    async findOneByEmail(email: string) :Promise<User> {
-        const user = await this.prisma.user.findUnique({where:{email}})
+    async findOneByEmail(email: string): Promise<User> {
+        const user = await this.prisma.user.findUnique({ where: { email } })
 
         return user
+    }
+
+    async findAll(): Promise<User[]> {
+        try {
+
+            const users = await this.prisma.user.findMany()
+
+            return users
+
+        } catch (err) {
+            throw new InternalServerErrorException({ statusCode: 500, message: "Internal Server Error" })
+        }
     }
 
 }
