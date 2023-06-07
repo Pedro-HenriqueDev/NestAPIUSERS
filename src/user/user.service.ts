@@ -11,19 +11,23 @@ export class UserService {
     ) { }
 
     async create(CreateUserDtos: CreateUserDtos) {
+        try {
 
-        if (await this.findOneByEmail(CreateUserDtos.email) != null) {
-            throw new BadRequestException("ops")
+            if (await this.findOneByEmail(CreateUserDtos.email) != null) {
+                throw new BadRequestException("ops")
+            }
+
+            const data = {
+                ...CreateUserDtos,
+                password: await bcrypt.hash(CreateUserDtos.password.toString(), 10)
+            }
+            const createdUser = await this.prisma.user.create({ data })
+
+            const { password: _, ...res } = createdUser
+            return res
+        } catch (err) {
+            throw new InternalServerErrorException()
         }
-
-        const data = {
-            ...CreateUserDtos,
-            password: await bcrypt.hash(CreateUserDtos.password.toString(), 10)
-        }
-        const createdUser = await this.prisma.user.create({ data })
-
-        const { password: _, ...res } = createdUser
-        return res
     }
 
     async findOneByEmail(email: string): Promise<User> {

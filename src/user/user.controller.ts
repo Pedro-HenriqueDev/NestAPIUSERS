@@ -1,4 +1,4 @@
-import { Body, Controller, Get, InternalServerErrorException, Post } from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, NotFoundException, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDtos } from './dtos/create-user.dtos';
 import { IsPublic } from '../auth/decorators/is-public.decorator';
@@ -11,12 +11,21 @@ export class UserController {
 
   @Post()
   @IsPublic()
-  create(@Body() CreateUserDtos: CreateUserDtos) {
-    return this.userService.create(CreateUserDtos)
+  async create(@Body() CreateUserDtos: CreateUserDtos) {
+    try {
+      const user = await this.userService.create(CreateUserDtos)
+
+      return user
+
+    } catch(err) {
+      throw new InternalServerErrorException()
+    }
   }
 
   @Get()
   profile(@CurrentUser() user: User) {
+    if(!user) return new NotFoundException("User not Found");
+
     return user;
   }
 
